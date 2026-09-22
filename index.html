@@ -123,6 +123,8 @@
   .gate-msg.success { color: var(--accent-strong); }
   .gate-note { font-size: 12px; color: var(--ink-faint); }
 
+  .locked { filter: blur(6px) saturate(.85); pointer-events: none; user-select: none; }
+
   .prompt-box {
     background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
     padding: 18px 20px; font-size: 14.5px; color: var(--ink); margin: 14px 0 18px; line-height: 1.6;
@@ -253,10 +255,10 @@
       <button type="submit" id="submitBtn">Unlock the guide</button>
     </form>
     <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
-    <p class="gate-note">No spam. One email to confirm you're a real inbox, then the guide's yours.</p>
+    <p class="gate-note">No spam.</p>
   </div>
 
-  <div id="lockedStack" hidden>
+  <div id="lockedStack" class="locked">
 
     <div class="page">
       <span class="folio">03</span>
@@ -475,7 +477,7 @@
   }
 
   function unlock() {
-    locked.hidden = false;
+    locked.classList.remove('locked');
     setMsg("You're in. Scroll down for the rest.", 'success');
     btn.disabled = true;
     input.disabled = true;
@@ -484,7 +486,7 @@
 
   try {
     if (localStorage.getItem('messyNotesUnlocked') === '1') {
-      locked.hidden = false;
+      locked.classList.remove('locked');
       gateCard.hidden = true;
     }
   } catch (e) {}
