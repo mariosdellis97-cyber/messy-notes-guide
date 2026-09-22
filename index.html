@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Messy Notes Playbook</title>
+<meta name="description" content="The four-pass system for turning any meeting into a client-ready recap with Claude. A free guide from Vanpoint.">
+<meta property="og:title" content="The Messy Notes Playbook">
+<meta property="og:description" content="The four-pass system for turning any meeting into a client-ready recap with Claude.">
+<meta property="og:type" content="website">
+<!-- Optional: add a real share image and uncomment
+<meta property="og:image" content="https://vanpoint.com/guides/messy-notes-cover.png"> -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f2efe6;
+    --card: #fbf9f2;
+    --ink: #2b2620;
+    --ink-soft: #6b6255;
+    --ink-faint: #a39a89;
+    --accent: #3f5d4e;
+    --accent-soft: #cdd9d0;
+    --accent-strong: #2d453a;
+    --brass: #a97e2f;
+    --brass-soft: #ecdfc2;
+    --warn: #a1502e;
+    --warn-soft: #ecdccf;
+    --neutral-soft: #e7e3d7;
+    --rule: #ddd5c3;
+    --veil: rgba(43, 38, 32, 0.72);
+    --shadow: rgba(43, 38, 32, 0.14);
+    --shadow-strong: rgba(43, 38, 32, 0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1a1815; --card: #262319; --ink: #ece6d9; --ink-soft: #b3aa98;
+      --ink-faint: #756c5c; --accent: #8fb39e; --accent-soft: #33453b;
+      --accent-strong: #b7d6c4; --brass: #d7ab5a; --brass-soft: #3c3222;
+      --warn: #d98a63; --warn-soft: #3c2a20; --neutral-soft: #333026;
+      --rule: #3a352b; --veil: rgba(8, 7, 5, 0.78); --shadow: rgba(0,0,0,.4);
+      --shadow-strong: rgba(0,0,0,.55);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 1px 1px, var(--rule) 1px, transparent 0) 0 0/22px 22px,
+      var(--paper);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding-inline: 16px;
+    padding-block: 48px;
+    line-height: 1.65;
+    font-size: 15.5px;
+  }
+  img { max-width: 100%; }
+  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 600; text-wrap: balance; margin: 0; }
+  .wrap { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+
+  .cover {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 16px;
+    padding: 64px 32px 48px; text-align: center; box-shadow: 0 8px 28px var(--shadow-strong);
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--brass));
+  }
+  .cover .kicker { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); font-weight: 700; }
+  .cover h1 { font-size: clamp(30px, 6vw, 42px); }
+  .cover .subtitle { font-size: 17px; color: var(--ink-soft); max-width: 36ch; }
+  .cover .byline { font-size: 13px; color: var(--ink-faint); margin-top: 10px; }
+  .ribbon { width: 2px; height: 30px; background: var(--brass); margin-top: 6px; opacity: .6; }
+
+  .page {
+    background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--rule);
+    border-radius: 14px; padding: 34px 30px; box-shadow: 0 3px 14px var(--shadow); position: relative;
+  }
+  .page.marked { border-left-color: var(--accent); }
+  .folio { position: absolute; top: 20px; right: 24px; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .page h2 { font-size: 23px; margin-bottom: 14px; padding-right: 44px; }
+  .page p { margin: 0 0 13px; color: var(--ink); }
+  .page p:last-child { margin-bottom: 0; }
+  .page .lede { color: var(--ink-soft); }
+  .pull {
+    font-family: "Fraunces", serif; font-style: italic; font-weight: 500; font-size: 19px;
+    color: var(--accent-strong); line-height: 1.45; padding-left: 16px;
+    border-left: 2px solid var(--brass); margin: 18px 0;
+  }
+  .art { margin: 20px 0; display: flex; justify-content: center; }
+  .art svg { width: 100%; max-width: 460px; height: auto; }
+
+  /* gate */
+  .gate-card {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 16px;
+    padding: 40px 32px; text-align: center; box-shadow: 0 8px 28px var(--shadow-strong);
+    display: flex; flex-direction: column; gap: 16px; align-items: center;
+  }
+  .gate-card .gate-icon svg { color: var(--accent); }
+  .gate-card h3 { font-size: 22px; }
+  .gate-card p { color: var(--ink-soft); font-size: 14.5px; margin: 0; max-width: 42ch; }
+  #emailForm { display: flex; gap: 8px; width: 100%; max-width: 420px; margin-top: 6px; flex-wrap: wrap; }
+  #emailForm input {
+    flex: 1 1 200px; min-width: 0; padding: 13px 14px; border-radius: 8px;
+    border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+    font-family: inherit; font-size: 15px;
+  }
+  #emailForm input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #emailForm button {
+    padding: 13px 22px; border-radius: 8px; border: none; background: var(--accent);
+    color: #f6f2e6; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit;
+    transition: background .15s ease;
+  }
+  #emailForm button:hover { background: var(--accent-strong); }
+  #emailForm button:disabled { opacity: .6; cursor: default; }
+  .gate-msg { font-size: 13px; min-height: 18px; }
+  .gate-msg.error { color: var(--warn); }
+  .gate-msg.success { color: var(--accent-strong); }
+  .gate-note { font-size: 12px; color: var(--ink-faint); }
+
+  .prompt-box {
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 18px 20px; font-size: 14.5px; color: var(--ink); margin: 14px 0 18px; line-height: 1.6;
+  }
+  .prompt-box .label {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-strong);
+    font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .prompt-box .label svg { width: 14px; height: 14px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px; letter-spacing: .02em; white-space: nowrap;
+  }
+  .chip-confirmed { background: var(--accent-soft); color: var(--accent-strong); }
+  .chip-inferred { background: var(--brass-soft); color: var(--brass); }
+  .chip-unclear { background: var(--neutral-soft); color: var(--ink-soft); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .flow { display: flex; align-items: stretch; justify-content: center; gap: 6px; margin: 22px 0; flex-wrap: wrap; }
+  .flow-node {
+    flex: 1 1 120px; max-width: 150px; background: var(--paper); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 16px 12px; text-align: center; display: flex;
+    flex-direction: column; align-items: center; gap: 8px;
+  }
+  .flow-node .n { font-family: "Fraunces", serif; font-weight: 600; font-size: 13px; color: var(--brass); }
+  .flow-node .t { font-family: "Fraunces", serif; font-weight: 600; font-size: 15px; }
+  .flow-node .d { font-size: 12px; color: var(--ink-soft); }
+  .flow-arrow { display: flex; align-items: center; color: var(--ink-faint); flex: 0 0 20px; }
+  @media (max-width: 560px) { .flow { flex-direction: column; } .flow-arrow { transform: rotate(90deg); align-self: center; } }
+
+  .icon-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 20px 0 6px; }
+  .icon-item { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 104px; }
+  .icon-badge { width: 52px; height: 52px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; }
+  .icon-badge svg { width: 24px; height: 24px; }
+  .icon-item span { font-size: 12px; color: var(--ink-soft); text-align: center; }
+
+  .module { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+  .module:last-child { margin-bottom: 0; }
+  .module .m-title { font-family: "Fraunces", serif; font-weight: 600; color: var(--accent-strong); font-size: 14.5px; margin-bottom: 4px; }
+  .module p { font-size: 13.5px; margin: 0; }
+
+  .issue { margin-bottom: 22px; }
+  .issue:last-child { margin-bottom: 0; }
+  .issue .i-title { font-family: "Fraunces", serif; font-weight: 600; font-size: 15.5px; margin-bottom: 10px; }
+  .compare { display: flex; flex-direction: column; gap: 8px; }
+  .comp-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+  .comp-row.bad { background: var(--warn-soft); border-left: 3px solid var(--warn); }
+  .comp-row.good { background: var(--accent-soft); border-left: 3px solid var(--accent); }
+  .comp-row svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .comp-row.bad svg { color: var(--warn); }
+  .comp-row.good svg { color: var(--accent-strong); }
+
+  .mockup { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .mockup .bar { background: var(--paper); padding: 9px 12px; display: flex; gap: 6px; border-bottom: 1px solid var(--rule); }
+  .mockup .bar span { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+  .mockup .body-pane { padding: 16px; font-size: 13px; background: var(--card); }
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) { .ba-grid { grid-template-columns: 1fr; } }
+  .ba-col { padding: 16px; }
+  .ba-col + .ba-col { border-left: 1px solid var(--rule); }
+  @media (max-width: 480px) { .ba-col + .ba-col { border-left: none; border-top: 1px solid var(--rule); } }
+  .ba-col .ba-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; display: block; }
+  .ba-col.after .ba-label { color: var(--accent-strong); }
+  .ba-col p { font-size: 13px; margin: 0 0 10px; }
+  .ba-col b { font-family: "Fraunces", serif; }
+
+  .closing { text-align: center; padding: 8px 0 24px; color: var(--ink-faint); font-size: 13px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <span class="kicker">The Playbook</span>
+    <h1>The Messy Notes Playbook</h1>
+    <p class="subtitle">The four-pass system for turning any meeting into a client-ready recap with Claude</p>
+    <div class="ribbon"></div>
+    <p class="byline">Marios &middot; Vanpoint</p>
+  </div>
+
+  <div class="page">
+    <span class="folio">01</span>
+    <h2>Every meeting leaves you with two things</h2>
+    <p>What got decided, and what has to happen because of it. Most people lose track of the second one somewhere between hanging up and finally sitting down to write it up, usually an hour later, tired, guessing at half of it.</p>
+    <p>It's not really a note taking problem. It's a timing problem. By the time you get around to writing the recap, you've already forgotten the thing that mattered most.</p>
+    <div class="art">
+      <svg viewBox="0 0 360 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="8" width="160" height="132" rx="10" stroke="var(--ink-faint)" stroke-width="1.5"/>
+        <path d="M28 34 Q47 22 64 36 T102 30 Q118 40 140 28" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M24 60 Q52 74 74 58 Q100 44 148 64" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M30 88 Q57 78 84 94 T144 90" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M27 112 Q62 124 104 108 T150 116" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="126" cy="26" r="10" fill="none" stroke="var(--warn)" stroke-width="1.6"/>
+        <path d="M122 26h8M126 22v8" stroke="var(--warn)" stroke-width="1.6" stroke-linecap="round"/>
+        <g transform="translate(200,0)">
+          <rect x="0" y="8" width="160" height="132" rx="10" stroke="var(--accent)" stroke-width="1.5"/>
+          <rect x="20" y="30" width="13" height="13" rx="3" stroke="var(--accent)" stroke-width="1.7"/>
+          <path d="M22.5 36.5 L27 41 L33.5 32" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="44" y1="36.5" x2="132" y2="36.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+          <rect x="20" y="60" width="13" height="13" rx="3" stroke="var(--accent)" stroke-width="1.7"/>
+          <path d="M22.5 66.5 L27 71 L33.5 62" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="44" y1="66.5" x2="132" y2="66.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+          <rect x="20" y="90" width="13" height="13" rx="3" stroke="var(--accent)" stroke-width="1.7"/>
+          <line x1="44" y1="96.5" x2="132" y2="96.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+          <rect x="20" y="115" width="13" height="13" rx="3" stroke="var(--ink-faint)" stroke-width="1.7"/>
+          <line x1="44" y1="121.5" x2="110" y2="121.5" stroke="var(--ink-faint)" stroke-width="1.5"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="page marked">
+    <span class="folio">02</span>
+    <h2>Why one prompt isn't enough</h2>
+    <p>Almost everyone who tries this makes the same mistake. They paste in their notes, ask for a clean summary, and get something that reads well and is occasionally, confidently, wrong. A "maybe Friday" becomes a hard deadline. A passing comment becomes a commitment. It reads clean, so you stop checking it, and that's exactly when it costs you.</p>
+    <p>The fix isn't a better single prompt. It's not trying to do extraction, fact checking and formatting in one pass, the same way you wouldn't write, edit and proofread a client email in one breath.</p>
+    <p class="pull">I run this as four short passes instead of one. I call it the Four-Pass Method, and the prompts for each pass are right after you unlock this guide below.</p>
+  </div>
+
+  <div class="gate-card">
+    <div class="gate-icon"><svg width="34" height="34" viewBox="0 0 34 34" fill="none"><rect x="7" y="15" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M11 15v-4a6 6 0 0 1 12 0v4" stroke="currentColor" stroke-width="1.6"/></svg></div>
+    <h3>Get the rest of the guide</h3>
+    <p>All four prompts, the meeting-type modules, the troubleshooting section and the full worked example. Free, drop your email below.</p>
+    <form id="emailForm">
+      <input type="email" id="emailInput" name="email_address" placeholder="you@company.com" required autocomplete="email">
+      <button type="submit" id="submitBtn">Unlock the guide</button>
+    </form>
+    <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
+    <p class="gate-note">No spam. One email to confirm you're a real inbox, then the guide's yours.</p>
+  </div>
+
+  <div id="lockedStack" hidden>
+
+    <div class="page">
+      <span class="folio">03</span>
+      <h2>The Four-Pass Method</h2>
+      <p>Four short prompts, run one after another in the same chat. Each one has a single job, which is the whole reason it works better than asking for everything at once.</p>
+      <div class="flow">
+        <div class="flow-node">
+          <span class="n">Pass 1</span>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--accent)" stroke-width="1.8"/><line x1="16" y1="16" x2="22" y2="22" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="t">Extract</span>
+          <span class="d">Pull the raw facts, no summarizing yet</span>
+        </div>
+        <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 10h13M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="flow-node">
+          <span class="n">Pass 2</span>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 3l8 3.5v6c0 6-4.5 9-8 10.5C9.5 21.5 5 18.5 5 12.5v-6L13 3Z" stroke="var(--accent)" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 13l2.5 2.5L17 10" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="t">Verify</span>
+          <span class="d">Grade its own confidence, line by line</span>
+        </div>
+        <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 10h13M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="flow-node">
+          <span class="n">Pass 3</span>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="4" width="8" height="8" rx="2" stroke="var(--accent)" stroke-width="1.7"/><rect x="14" y="4" width="8" height="8" rx="2" stroke="var(--accent)" stroke-width="1.7"/><rect x="4" y="14" width="8" height="8" rx="2" stroke="var(--accent)" stroke-width="1.7"/><rect x="14" y="14" width="8" height="8" rx="2" stroke="var(--accent)" stroke-width="1.7"/></svg>
+          <span class="t">Structure</span>
+          <span class="d">Build the four-section recap</span>
+        </div>
+        <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 10h13M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="flow-node">
+          <span class="n">Pass 4</span>
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M3 13l19-9-7 19-3-8-9-2Z" stroke="var(--accent)" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <span class="t">Deliver</span>
+          <span class="d">Reshape it for wherever it's going</span>
+        </div>
+      </div>
+      <p class="lede">Each pass takes the previous one's output as its input. You're not retyping anything, you're just saying "next" and pasting the prompt.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">04</span>
+      <h2>Extract &mdash; Pass 1 of 4</h2>
+      <p>Before anything gets summarized, pull the raw material out exactly as it appears. This is the pass everyone skips, and skipping it is where the invented deadlines come from.</p>
+      <div class="prompt-box">
+        <span class="label">Paste with your raw notes</span>
+        "Read these raw meeting notes. Before summarizing anything, pull out four lists exactly as they appear, without smoothing them into full sentences yet: every person mentioned and what role they seem to play, every date, number or amount, every commitment or promise anyone made, using their own words, and every place the conversation trails off or leaves something unresolved. Don't interpret yet, and if something is unclear, copy it exactly as said rather than cleaning it up. This is a raw pull, not a summary."
+      </div>
+      <p class="lede">You'll get something messier than a summary and that's the point, nothing has been quietly smoothed over yet.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">05</span>
+      <h2>Verify &mdash; Pass 2 of 4</h2>
+      <p>This is the pass that actually earns the guide its name. Feed the raw pull back in and make Claude grade its own confidence before anything gets formatted.</p>
+      <div class="prompt-box">
+        <span class="label">Paste after Pass 1's output</span>
+        "Go through every commitment and every date in the list above and mark each one Confirmed, Inferred, or Unclear. Confirmed means someone stated it directly with no ambiguity. Inferred means you're reasonably confident but it was implied rather than said outright, add a short note on what you inferred it from. Unclear means you genuinely can't tell and shouldn't guess. Be harder on yourself here than feels natural, if in doubt mark it Inferred or Unclear rather than Confirmed."
+      </div>
+      <p>Three tags, that's all you need:</p>
+      <p><span class="chip chip-confirmed">Confirmed</span> &nbsp; <span class="chip chip-inferred">Inferred</span> &nbsp; <span class="chip chip-unclear">Unclear</span></p>
+      <p class="lede">They carry through into the final recap in Pass 3, which is what makes it trustworthy enough to send without a second read.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">06</span>
+      <h2>Structure &mdash; Pass 3 of 4</h2>
+      <p>Only now, with everything checked, do you ask for the actual recap.</p>
+      <div class="prompt-box">
+        <span class="label">Paste after Pass 2's output</span>
+        "Using the verified list above, write the recap in four sections: Summary, three to four sentences, Decisions Made, Action Items, each with an owner, a deadline if there is one, and its confidence tag in brackets, and Open Questions, anything still unresolved or marked Unclear. Keep the confidence tags visible in the Action Items section, don't quietly drop them, they're the whole point."
+      </div>
+      <p class="lede">A recap that says "Friday (Inferred, said as 'maybe end of week')" is more useful than one that confidently says "Friday" and is wrong.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">07</span>
+      <h2>Deliver &mdash; Pass 4 of 4</h2>
+      <p>The recap from Pass 3 is the source of truth. Where it actually needs to live changes by situation, so reshape it with one more short prompt instead of writing it out by hand each time.</p>
+      <div class="icon-row">
+        <div class="icon-item">
+          <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--accent-strong)" stroke-width="1.6"/><path d="M4 6.5l8 6 8-6" stroke="var(--accent-strong)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <span>Client email</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H9l-4 4V5Z" stroke="var(--accent-strong)" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <span>Team chat update</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="var(--accent-strong)" stroke-width="1.6"/><line x1="3" y1="10" x2="21" y2="10" stroke="var(--accent-strong)" stroke-width="1.6"/><line x1="9" y1="10" x2="9" y2="20" stroke="var(--accent-strong)" stroke-width="1.6"/></svg></div>
+          <span>CRM / Notion log</span>
+        </div>
+        <div class="icon-item">
+          <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4l7 12H5l7-12Z" stroke="var(--accent-strong)" stroke-width="1.6" stroke-linejoin="round"/><line x1="12" y1="11" x2="12" y2="14" stroke="var(--accent-strong)" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <span>Manager ping</span>
+        </div>
+      </div>
+      <div class="prompt-box" style="margin-top:16px;">
+        <span class="label">Pick one, paste after Pass 3</span>
+        "Turn the recap above into a short follow-up email to the client. Keep it direct, no corporate padding. Lead with the summary in one line, list the action items plainly, sign off simply." <br><br>Swap "email to the client" for "Slack update under 80 words" or "one-line status for my manager" depending on where it needs to go.
+      </div>
+    </div>
+
+    <div class="page">
+      <span class="folio">08</span>
+      <h2>Adjust it to the room</h2>
+      <p>Add one of these as an extra line before Pass 3, depending on what kind of meeting it was.</p>
+      <div class="module"><div class="m-title">Client call</div><p>Be strictest about anything involving price, scope or deadlines when you grade confidence. Clients remember exact numbers even when they were said casually.</p></div>
+      <div class="module"><div class="m-title">Internal standup</div><p>Weight blockers over decisions. If someone mentions being stuck or waiting on something, treat it as an action item even without a stated deadline.</p></div>
+      <div class="module"><div class="m-title">Sales call</div><p>Add a fifth section called Next Step in the Pipeline, and list any objections raised as their own line under Open Questions.</p></div>
+      <div class="module"><div class="m-title">Vendor negotiation</div><p>Treat every number as Inferred unless it was repeated back and confirmed by both sides in the conversation itself.</p></div>
+      <div class="module"><div class="m-title">Performance review</div><p>Keep the Summary section factual and neutral. This recap may get read by someone in HR later, not just the two of you.</p></div>
+    </div>
+
+    <div class="page">
+      <span class="folio">09</span>
+      <h2>Where this still goes wrong</h2>
+      <p class="lede">The Four-Pass Method catches most of this on its own. Worth knowing what it's catching.</p>
+
+      <div class="issue">
+        <div class="i-title">Invented deadlines</div>
+        <div class="compare">
+          <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>One-shot prompt: "Deadline: Friday" &mdash; notes actually said "maybe end of week"</span></div>
+          <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Four-pass: "Deadline: end of week (Inferred, said as 'maybe end of week', confirm exact day)"</span></div>
+        </div>
+      </div>
+
+      <div class="issue">
+        <div class="i-title">Two people share a first name</div>
+        <div class="compare">
+          <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>Assigns the action to whichever Sam it guessed first</span></div>
+          <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Pass 1: "if two people share a first name, note both and flag which one owns each item"</span></div>
+        </div>
+      </div>
+
+      <div class="issue">
+        <div class="i-title">Mistranscribed numbers</div>
+        <div class="compare">
+          <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>A spoken price gets passed through exactly as transcribed, typo included</span></div>
+          <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Pass 2: "flag any number that sounds unusually round or unusually precise for spoken conversation"</span></div>
+        </div>
+      </div>
+
+      <div class="issue">
+        <div class="i-title">A call too long for one pass</div>
+        <div class="compare">
+          <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>The back half of a long transcript gets thinner treatment than the front</span></div>
+          <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Split into two halves with two minutes of overlap, run all four passes on each, then one short pass to merge and dedupe</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+      <span class="folio">10</span>
+      <h2>What it actually looks like</h2>
+      <div class="mockup">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body-pane">
+          <div class="ba-grid">
+            <div class="ba-col before">
+              <span class="ba-label">Raw notes</span>
+              <p>"ok so jen said pricing by fri maybe, need to loop sam in, deck still not done, ask about the logo again, follow up thurs?"</p>
+            </div>
+            <div class="ba-col after">
+              <span class="ba-label">After all four passes</span>
+              <p><b>Action items</b></p>
+              <p style="margin-bottom:6px;">Jen: send pricing <span class="chip chip-inferred">Inferred</span><br>You: loop in Sam <span class="chip chip-confirmed">Confirmed</span><br>You: finish deck <span class="chip chip-confirmed">Confirmed</span></p>
+              <p><b>Open question</b></p>
+              <p>Logo status <span class="chip chip-unclear">Unclear</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="lede">The recap doesn't just look tidier. It surfaces the thing the raw notes buried, that "Friday" was never actually confirmed by anyone.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">11</span>
+      <h2>Make it stick</h2>
+      <p>Retyping four prompts every time you start a chat is how people quietly stop doing this after a week. Don't.</p>
+      <p>Create one Claude Project called something like Meeting Recaps, and paste the four prompts in as project instructions or reference files. From then on, every new call only needs one thing pasted into a fresh chat inside that project, the raw notes. Claude already knows the Four-Pass Method because it lives in the project, not in your clipboard.</p>
+      <p class="lede">Ten minutes of setup, once. After that, every recap is a paste and a wait.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">12</span>
+      <h2>That's the system</h2>
+      <p>Not a party trick prompt, the actual four passes I run after every call that matters. If it saved you time, the best test is your very next one.</p>
+      <p class="lede">I write about things like this most weeks, mostly Claude, GPT and a handful of other tools used for actual work, not hype. If that's useful, come find me on LinkedIn.</p>
+      <p class="closing" style="padding:0;margin-top:14px;">Made with a little help from Vanpoint.</p>
+    </div>
+
+  </div>
+
+  <p class="closing">13 pages &middot; first 3 free to read</p>
+
+</div>
+
+<script>
+(function () {
+  // ---- CONFIGURE ME -----------------------------------------------------
+  // Paste the "action" URL from your Kit form's raw HTML embed here.
+  // In Kit: Grow > Landing Pages & Forms > this form > Embed > "Raw HTML/JS",
+  // copy the <form action="..."> value exactly, including the form's id.
+  // It looks like: https://app.kit.com/forms/1234567/subscriptions
+  var KIT_FORM_ACTION = "https://app.kit.com/forms/9948222/subscriptions";
+  // -------------------------------------------------------------------------
+
+  var form = document.getElementById('emailForm');
+  var input = document.getElementById('emailInput');
+  var btn = document.getElementById('submitBtn');
+  var msg = document.getElementById('gateMsg');
+  var locked = document.getElementById('lockedStack');
+  var gateCard = document.querySelector('.gate-card');
+
+  function setMsg(text, kind) {
+    msg.textContent = text;
+    msg.className = 'gate-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function unlock() {
+    locked.hidden = false;
+    setMsg("You're in. Scroll down for the rest.", 'success');
+    btn.disabled = true;
+    input.disabled = true;
+    try { localStorage.setItem('messyNotesUnlocked', '1'); } catch (e) {}
+  }
+
+  try {
+    if (localStorage.getItem('messyNotesUnlocked') === '1') {
+      locked.hidden = false;
+      gateCard.hidden = true;
+    }
+  } catch (e) {}
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = input.value.trim();
+    if (!email || KIT_FORM_ACTION.indexOf('REPLACE_WITH') === 0) {
+      setMsg(KIT_FORM_ACTION.indexOf('REPLACE_WITH') === 0
+        ? 'This page is not wired to Kit yet, set KIT_FORM_ACTION in the script.'
+        : 'Enter a valid email.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    setMsg('', '');
+
+    fetch(KIT_FORM_ACTION, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'email_address=' + encodeURIComponent(email)
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad status');
+        btn.textContent = 'Unlock the guide';
+        unlock();
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Unlock the guide';
+        setMsg("Something didn't go through, try again in a moment.", 'error');
+      });
+  });
+})();
+</script>
+</body>
+</html>
