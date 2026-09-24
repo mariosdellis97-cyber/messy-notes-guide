@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Front Desk OS</title>
+<meta name="description" content="How to connect a hotel's inbox, calendar, and guest requests into one system Claude runs for you. A free guide from Vantpoint, includes a real installable Claude Skill.">
+<meta property="og:title" content="The Front Desk OS">
+<meta property="og:description" content="How to connect your inbox, calendar, and guest requests into one system Claude runs for you, from first setup to daily use.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f2efe6; --card: #fbf9f2; --ink: #2b2620; --ink-soft: #6b6255;
+    --ink-faint: #a39a89; --accent: #123a5c; --accent-soft: #d7e8ea;
+    --accent-strong: #04102a; --brass: #0f9488; --brass-soft: #d3f0ec;
+    --warn: #a1502e; --warn-soft: #ecdccf; --neutral-soft: #e7e3d7;
+    --rule: #ddd5c3; --veil: rgba(43,38,32,.72); --shadow: rgba(43,38,32,.14);
+    --shadow-strong: rgba(43,38,32,.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1a1815; --card: #262319; --ink: #ece6d9; --ink-soft: #b3aa98;
+      --ink-faint: #756c5c; --accent: #8fb8d9; --accent-soft: #14283d;
+      --accent-strong: #cfe3f2; --brass: #35d6b8; --brass-soft: #123832;
+      --warn: #d98a63; --warn-soft: #3c2a20; --neutral-soft: #333026;
+      --rule: #3a352b; --veil: rgba(8,7,5,.78); --shadow: rgba(0,0,0,.4);
+      --shadow-strong: rgba(0,0,0,.55);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 1px 1px, var(--rule) 1px, transparent 0) 0 0/22px 22px, var(--paper);
+    background-attachment: fixed; color: var(--ink);
+    font-family: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding-inline: 16px; padding-block: 48px; line-height: 1.65; font-size: 15.5px;
+  }
+  img { max-width: 100%; }
+  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 600; text-wrap: balance; margin: 0; }
+  .wrap { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+
+  .cover { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 64px 32px 48px; text-align: center; box-shadow: 0 8px 28px var(--shadow-strong); display: flex; flex-direction: column; align-items: center; gap: 14px; position: relative; overflow: hidden; }
+  .cover::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: linear-gradient(90deg, var(--accent), var(--brass)); }
+  .cover .kicker { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); font-weight: 700; }
+  .cover h1 { font-size: clamp(28px, 6vw, 40px); }
+  .cover .subtitle { font-size: 17px; color: var(--ink-soft); max-width: 38ch; }
+  .cover .byline { font-size: 13px; color: var(--ink-faint); margin-top: 10px; }
+  .ribbon { width: 2px; height: 30px; background: var(--brass); margin-top: 6px; opacity: .6; }
+
+  .page { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--rule); border-radius: 14px; padding: 34px 30px; box-shadow: 0 3px 14px var(--shadow); position: relative; }
+  .page.marked { border-left-color: var(--accent); }
+  .folio { position: absolute; top: 20px; right: 24px; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 8px; display: block; }
+  .page h2 { font-size: 22px; margin-bottom: 14px; padding-right: 44px; }
+  .page h3 { font-size: 15.5px; margin: 16px 0 8px; color: var(--ink); }
+  .page p { margin: 0 0 13px; color: var(--ink); }
+  .page p:last-child { margin-bottom: 0; }
+  .page .lede { color: var(--ink-soft); }
+  .pull { font-family: "Fraunces", serif; font-style: italic; font-weight: 500; font-size: 18px; color: var(--accent-strong); line-height: 1.45; padding-left: 16px; border-left: 2px solid var(--brass); margin: 18px 0; }
+  .art { margin: 20px 0; display: flex; justify-content: center; }
+  .art svg { width: 100%; max-width: 480px; height: auto; }
+
+  .gate-card { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 40px 32px; text-align: center; box-shadow: 0 8px 28px var(--shadow-strong); display: flex; flex-direction: column; gap: 16px; align-items: center; }
+  .gate-card .gate-icon svg { color: var(--accent); }
+  .gate-card h3 { font-size: 22px; }
+  .gate-card p { color: var(--ink-soft); font-size: 14.5px; margin: 0; max-width: 44ch; }
+  #emailForm { display: flex; gap: 8px; width: 100%; max-width: 420px; margin-top: 6px; flex-wrap: wrap; }
+  #emailForm input { flex: 1 1 200px; min-width: 0; padding: 13px 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 15px; }
+  #emailForm input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #emailForm button { padding: 13px 22px; border-radius: 8px; border: none; background: var(--accent); color: #f6f2e6; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; transition: background .15s ease; }
+  #emailForm button:hover { background: var(--accent-strong); }
+  #emailForm button:disabled { opacity: .6; cursor: default; }
+  .gate-msg { font-size: 13px; min-height: 18px; }
+  .gate-msg.error { color: var(--warn); }
+  .gate-msg.success { color: var(--accent-strong); }
+  .gate-note { font-size: 12px; color: var(--ink-faint); }
+  .locked { filter: blur(6px) saturate(.85); pointer-events: none; user-select: none; }
+
+  .download-btn { display: none; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 8px; background: var(--brass); color: #23200f; font-weight: 700; font-size: 15px; text-decoration: none; margin-top: 4px; }
+  .download-btn.show { display: inline-flex; }
+  .download-btn svg { width: 16px; height: 16px; }
+
+  .prompt-box { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 18px 20px; font-size: 14.5px; color: var(--ink); margin: 14px 0 18px; line-height: 1.6; }
+  .prompt-box .label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-strong); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; letter-spacing: .02em; white-space: nowrap; }
+  .chip-new { background: var(--neutral-soft); color: var(--ink-soft); }
+  .chip-ack { background: var(--brass-soft); color: var(--brass); }
+  .chip-progress { background: var(--accent-soft); color: var(--accent-strong); }
+  .chip-resolved { background: var(--accent); color: #f6f2e6; }
+  .chip-urgent { background: var(--warn-soft); color: var(--warn); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .hub { position: relative; margin: 24px auto; }
+  .hub svg { width: 100%; max-width: 420px; height: auto; }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+  .step { display: flex; gap: 14px; align-items: flex-start; background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+  .step .num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #f6f2e6; display: flex; align-items: center; justify-content: center; font-family: "Fraunces", serif; font-weight: 600; font-size: 13px; }
+  .step .body b { display: block; font-family: "Fraunces", serif; font-size: 14.5px; margin-bottom: 2px; }
+  .step .body span { font-size: 13.5px; color: var(--ink-soft); }
+
+  .comp-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; }
+  .comp-row.bad { background: var(--warn-soft); border-left: 3px solid var(--warn); }
+  .comp-row.good { background: var(--accent-soft); border-left: 3px solid var(--accent); }
+  .comp-row svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .comp-row.bad svg { color: var(--warn); }
+  .comp-row.good svg { color: var(--accent-strong); }
+
+  .mockup { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .mockup .bar { background: var(--paper); padding: 9px 12px; display: flex; gap: 6px; border-bottom: 1px solid var(--rule); }
+  .mockup .bar span { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+  .mockup .body-pane { padding: 16px; font-size: 13px; background: var(--card); }
+  .ptable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ptable th { text-align: left; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+  .ptable td { padding: 7px 8px; border-bottom: 1px solid var(--rule); color: var(--ink); }
+
+  .icon-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 20px 0 6px; }
+  .icon-item { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 104px; }
+  .icon-badge { width: 52px; height: 52px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; }
+  .icon-badge svg { width: 24px; height: 24px; }
+  .icon-item span { font-size: 12px; color: var(--ink-soft); text-align: center; }
+
+  .module { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+  .module:last-child { margin-bottom: 0; }
+  .module .m-title { font-family: "Fraunces", serif; font-weight: 600; color: var(--accent-strong); font-size: 14.5px; margin-bottom: 4px; }
+  .module p { font-size: 13.5px; margin: 0; }
+
+  .closing { text-align: center; padding: 8px 0 24px; color: var(--ink-faint); font-size: 13px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <span class="kicker">Hotel Playbook</span>
+    <h1>The Front Desk OS</h1>
+    <p class="subtitle">How to connect your inbox, calendar, and guest requests into one system Claude runs for you, from first setup to daily use</p>
+    <div class="ribbon"></div>
+    <p class="byline"><img src="data:image/png;base64,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" alt="" style="height:16px;width:auto;vertical-align:-3px;margin-right:5px;">Marios &middot; Vantpoint</p>
+  </div>
+
+  <div class="page">
+    <span class="folio">01</span>
+    <h2>What you're actually installing</h2>
+    <p>Before any setup, worth being clear on what this is. Claude is an AI assistant you talk to in plain English, the same way you'd brief a new team member. It can read your email, check a calendar, draft a reply, and follow a set of instructions once instead of you repeating yourself every conversation.</p>
+    <p>A Skill is that set of instructions, packaged into one file. You install it once, and from then on Claude already knows exactly how your property wants requests logged, how bookings get confirmed, and how a review response should sound, without you explaining it again each time.</p>
+    <p class="lede">That's the idea behind this whole guide: teach Claude your system once, properly, and it runs it consistently after that.</p>
+  </div>
+
+  <div class="page marked">
+    <span class="folio">02</span>
+    <h2>Every shift starts the same way</h2>
+    <p>A guest emails about their AC. Another calls the desk about extra towels. Someone leaves a review mentioning a step that felt loose. Each one lands somewhere different, an inbox, a notepad, someone's memory, and each one needs a different person to notice it, act on it, and not forget it by the next shift change.</p>
+    <p class="pull">I built a system that fixes the routing instead of buying another app. I call it the Front Desk OS, and everything, including a free Skill built specifically for this, is right below, once you're in.</p>
+  </div>
+
+  <div class="gate-card">
+    <div class="gate-icon"><svg width="34" height="34" viewBox="0 0 34 34" fill="none"><rect x="7" y="15" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M11 15v-4a6 6 0 0 1 12 0v4" stroke="currentColor" stroke-width="1.6"/></svg></div>
+    <h3>Get the rest of the guide + the Skill</h3>
+    <p>Getting Claude itself, the full setup, all five workflows, the review responder, the troubleshooting page, and a real installable Claude Skill that runs the whole system. Free, drop your email below.</p>
+    <form id="emailForm">
+      <input type="email" id="emailInput" name="email_address" placeholder="you@company.com" required autocomplete="email">
+      <button type="submit" id="submitBtn">Unlock the guide</button>
+    </form>
+    <p class="gate-msg" id="gateMsg" aria-live="polite"></p>
+    <a class="download-btn" id="downloadBtn" href="front-desk-os.skill" download>
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download the Skill
+    </a>
+    <p class="gate-note">No spam.</p>
+  </div>
+
+  <div id="lockedStack" class="locked">
+
+    <div class="page">
+      <span class="folio">03</span>
+      <span class="eyebrow">Start here if you're new to Claude</span>
+      <h2>Getting Claude itself</h2>
+      <p>If Claude's already part of your daily work, skip to the next page. If not, this is the entire account-creation step, about five minutes, before anything property-specific begins.</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div class="body"><b>Go to claude.ai</b><span>Or download the Claude app on desktop or mobile if you'd rather have it as its own app, both work the same for everything in this guide.</span></div></div>
+        <div class="step"><span class="num">2</span><div class="body"><b>Create an account</b><span>Sign up with an email address, or continue with Google, whichever is faster.</span></div></div>
+        <div class="step"><span class="num">3</span><div class="body"><b>Pick a plan</b><span>The free plan is enough to set up and test everything here. Once this is running daily across a property, a paid plan removes the usage limits.</span></div></div>
+        <div class="step"><span class="num">4</span><div class="body"><b>You're in</b><span>That's the whole account step. Next: the property-specific setup.</span></div></div>
+      </div>
+    </div>
+
+    <div class="page">
+      <span class="folio">04</span>
+      <h2>The Front Desk OS</h2>
+      <p>Four things run guest-facing work day to day: your inbox, your calendar, your guest requests, and your reviews. The Front Desk OS puts Claude in the middle of all four, reading and writing to each one instead of everything living in someone's head.</p>
+      <div class="hub">
+        <svg viewBox="0 -25 400 370" xmlns="http://www.w3.org/2000/svg">
+          <line x1="200" y1="160" x2="200" y2="55" stroke="var(--rule)" stroke-width="1.5"/>
+          <line x1="200" y1="160" x2="345" y2="160" stroke="var(--rule)" stroke-width="1.5"/>
+          <line x1="200" y1="160" x2="200" y2="265" stroke="var(--rule)" stroke-width="1.5"/>
+          <line x1="200" y1="160" x2="55" y2="160" stroke="var(--rule)" stroke-width="1.5"/>
+          <circle cx="200" cy="160" r="46" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.7"/>
+          <text x="200" y="156" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="15" fill="var(--accent-strong)">Claude</text>
+          <text x="200" y="173" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="10" fill="var(--accent-strong)">the connector</text>
+          <g transform="translate(200,10)"><circle r="30" fill="var(--paper)" stroke="var(--rule)" stroke-width="1.5"/><path d="M-12 -6l12 9 12-9" stroke="var(--brass)" stroke-width="1.6" fill="none" stroke-linejoin="round"/><rect x="-14" y="-10" width="28" height="20" rx="3" stroke="var(--brass)" stroke-width="1.6" fill="none"/></g>
+          <text x="200" y="52" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="11" fill="var(--ink-soft)">Inbox</text>
+          <g transform="translate(370,160)"><circle r="30" fill="var(--paper)" stroke="var(--rule)" stroke-width="1.5"/><rect x="-13" y="-12" width="26" height="22" rx="2" stroke="var(--brass)" stroke-width="1.6" fill="none"/><line x1="-13" y1="-4" x2="13" y2="-4" stroke="var(--brass)" stroke-width="1.4"/><line x1="-6" y1="-16" x2="-6" y2="-9" stroke="var(--brass)" stroke-width="1.4"/><line x1="6" y1="-16" x2="6" y2="-9" stroke="var(--brass)" stroke-width="1.4"/></g>
+          <text x="370" y="205" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="11" fill="var(--ink-soft)">Calendar</text>
+          <g transform="translate(200,290)"><circle r="30" fill="var(--paper)" stroke="var(--rule)" stroke-width="1.5"/><rect x="-14" y="-12" width="28" height="24" rx="2" stroke="var(--brass)" stroke-width="1.6" fill="none"/><line x1="-14" y1="-4" x2="14" y2="-4" stroke="var(--brass)" stroke-width="1.3"/><line x1="-14" y1="4" x2="14" y2="4" stroke="var(--brass)" stroke-width="1.3"/></g>
+          <text x="200" y="333" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="11" fill="var(--ink-soft)">Guest Log</text>
+          <g transform="translate(30,160)"><circle r="30" fill="var(--paper)" stroke="var(--rule)" stroke-width="1.5"/><path d="M0,-12 L3.5,-4 L12,-3.5 L5.5,2 L7,10.5 L0,6 L-7,10.5 L-5.5,2 L-12,-3.5 L-3.5,-4 Z" stroke="var(--brass)" stroke-width="1.4" fill="none" stroke-linejoin="round"/></g>
+          <text x="30" y="205" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="11" fill="var(--ink-soft)">Reviews</text>
+        </svg>
+      </div>
+      <p class="lede">The rest of this guide is that setup, once, about twenty minutes total.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">05</span>
+      <span class="eyebrow">Setup, part 1 of 2</span>
+      <h2>Connect your inbox</h2>
+      <p>This uses Claude's built-in Connectors, a click-to-connect feature, not anything you need to install or configure by hand.</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div class="body"><b>Open Settings</b><span>In Claude, go to Settings, then look for "Connectors" (sometimes shown as "Search &amp; Tools"). Exact wording shifts occasionally, look for the general idea.</span></div></div>
+        <div class="step"><span class="num">2</span><div class="body"><b>Find Gmail</b><span>Search the connector directory for Gmail.</span></div></div>
+        <div class="step"><span class="num">3</span><div class="body"><b>Click Connect</b><span>Sign in with the account the property actually uses for guest email, then approve the permissions it asks for.</span></div></div>
+        <div class="step"><span class="num">4</span><div class="body"><b>Done</b><span>Once connected, Claude can read and draft email in a normal conversation, nothing else needed on your end.</span></div></div>
+      </div>
+    </div>
+
+    <div class="page">
+      <span class="folio">06</span>
+      <span class="eyebrow">Setup, part 2 of 2</span>
+      <h2>Connect your calendar</h2>
+      <p>Same process, same place, different connector.</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div class="body"><b>Back in Connectors</b><span>Same Settings screen as the inbox step.</span></div></div>
+        <div class="step"><span class="num">2</span><div class="body"><b>Find Google Calendar</b><span>Search the directory, click Connect.</span></div></div>
+        <div class="step"><span class="num">3</span><div class="body"><b>Approve access</b><span>Same Google sign-in flow as before, usually one click if you're already signed in.</span></div></div>
+        <div class="step"><span class="num">4</span><div class="body"><b>Done</b><span>Claude can now check real room/booking availability and confirm bookings against it.</span></div></div>
+      </div>
+      <p class="lede">If your property runs on a dedicated PMS instead of a calendar, the guest log and review responder still work fully without this step, you'd just handle booking confirmations yourself.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">07</span>
+      <h2>Installing the Skill</h2>
+      <p>This is the free Skill I built specifically for this guide, Front Desk OS. It's the file that turns everything here from "things you could ask Claude to do" into "things Claude already knows to do," without you re-explaining the system in every new conversation.</p>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div class="body"><b>Download the Skill</b><span>It's included with this guide, look for the download alongside where you got this.</span></div></div>
+        <div class="step"><span class="num">2</span><div class="body"><b>Open Claude, find Skills</b><span>Under Settings, look for "Skills" or "Capabilities" depending on your plan, and upload the file there.</span></div></div>
+        <div class="step"><span class="num">3</span><div class="body"><b>Start a Project</b><span>Skills work best attached to a Claude Project, so every conversation inside it automatically has the whole system loaded.</span></div></div>
+        <div class="step"><span class="num">4</span><div class="body"><b>Test it</b><span>Paste in a real guest email and watch it route correctly, straight to the workflow it's meant for.</span></div></div>
+      </div>
+      <p class="lede">Once it's installed, you won't need to reference this guide day to day, the Skill carries all of it.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">08</span>
+      <h2>The Guest Log</h2>
+      <p>One file, <code>guestlog.md</code>, that every workflow reads from and writes to. No new software, Claude creates it the first time it's needed.</p>
+      <p>Every request moves through four stages, with an urgent flag that jumps the queue:</p>
+      <p><span class="chip chip-new">New</span> &nbsp; <span class="chip chip-ack">Acknowledged</span> &nbsp; <span class="chip chip-progress">In Progress</span> &nbsp; <span class="chip chip-resolved">Resolved</span> &nbsp; <span class="chip chip-urgent">Urgent</span></p>
+      <div class="mockup">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body-pane">
+          <table class="ptable">
+            <tr><th>Guest</th><th>Room</th><th>Status</th></tr>
+            <tr><td>Dana Mercer</td><td>214</td><td><span class="chip chip-progress">In Progress</span></td></tr>
+            <tr><td>Theo Bryant</td><td>108</td><td><span class="chip chip-urgent">Urgent</span></td></tr>
+            <tr><td>Nia Osei</td><td>301</td><td><span class="chip chip-new">New</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <p class="lede">Update it as the direct result of a real action, replying, resolving, confirming, never speculatively.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">09</span>
+      <span class="eyebrow">Workflow</span>
+      <h2>A guest request comes in</h2>
+      <div class="prompt-box">
+        <span class="label">Paste or forward the guest's message</span>
+        "Here's a guest request from room 214. Draft a reply that acknowledges specifically what they mentioned, not a generic apology. Then log it in the guest log."
+      </div>
+      <p class="lede">Claude drafts, you approve, it sends and logs the request in one pass. Nothing goes out without you seeing it first.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">10</span>
+      <span class="eyebrow">Workflow</span>
+      <h2>Confirming a booking</h2>
+      <div class="prompt-box">
+        <span class="label">Paste with the dates + room type asked about</span>
+        "Someone's asking about a double room for the weekend of the 14th. Check the calendar for real availability, and if it's open, draft the confirmation with the actual dates, room, and rate."
+      </div>
+      <p class="lede">Real availability, not a confirmation that turns out to be wrong once someone actually checks the calendar.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">11</span>
+      <span class="eyebrow">Workflow</span>
+      <h2>The daily "who's still waiting" check</h2>
+      <div class="prompt-box">
+        <span class="label">Ask once a shift</span>
+        "Who's still waiting on something?"
+      </div>
+      <div class="mockup">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body-pane">
+          <p style="margin:0 0 8px;"><b>Urgent (1)</b> — Theo Bryant, room 108, no hot water</p>
+          <p style="margin:0 0 8px;"><b>Open 2+ hours (2)</b> — Dana Mercer, one more</p>
+          <p style="margin:0;"><b>New, not yet acknowledged (1)</b> — Nia Osei</p>
+        </div>
+      </div>
+      <p class="lede">Urgent always leads, regardless of how long anything else has been sitting.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">12</span>
+      <span class="eyebrow">Workflow</span>
+      <h2>VIP and returning guests</h2>
+      <p>Luxury hospitality runs on guests feeling remembered, not just accommodated. This workflow handles that, without ever faking familiarity that isn't real, a fabricated "we remembered you love the corner suite" lands far worse than a plain welcome when it's wrong.</p>
+      <div class="prompt-box">
+        <span class="label">Paste with the guest's name + arrival date</span>
+        "Jane Whitfield is checking in Thursday, she's stayed with us before. Check what we actually know about her and draft a short welcome-back note, nothing invented."
+      </div>
+      <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>"So thrilled to have you back in your favorite corner suite!" — invents a preference that was never recorded</span></div>
+      <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>"Welcome back, we've held the quiet-floor room you asked for last time" — only what was actually noted</span></div>
+    </div>
+
+    <div class="page">
+      <span class="folio">13</span>
+      <span class="eyebrow">The compliance piece</span>
+      <h2>Review responses, done safely</h2>
+      <p>One more capability lives in the same system: responding to reviews, the ones that double as public marketing copy for every future guest reading them.</p>
+      <p>Every draft gets checked for accidental admissions of fault before it's delivered, especially on anything safety-related.</p>
+      <div class="comp-row bad"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 6l4 4M10 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>"Sorry our broken step caused your fall" — admits the step was broken and caused it</span></div>
+      <div class="comp-row good"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 8.2l1.8 1.8 3.4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>"Sorry to hear about your fall, we've had our team inspect the area" — acknowledges without conceding cause</span></div>
+      <p class="lede">Empathy and liability-safety aren't in tension. The good version still sounds human, it just doesn't concede anything that isn't actually confirmed.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">14</span>
+      <h2>If something doesn't work</h2>
+      <div class="module"><div class="m-title">"Claude says it can't access my calendar"</div><p>The Google connection may have expired. Go back to Settings → Connectors and reconnect, it's the same one-click flow as the original setup.</p></div>
+      <div class="module"><div class="m-title">"The guest log seems to have disappeared"</div><p>Keep everything inside the same Claude Project. Files created in one conversation outside a Project may not carry over to the next one.</p></div>
+      <div class="module"><div class="m-title">"Drafts don't sound like our property's voice"</div><p>Add a couple of lines about your brand's tone to the Project's instructions once, formal or warm, brief or detailed. It'll carry through every draft after that.</p></div>
+      <div class="module"><div class="m-title">"Can more than one staff member use this?"</div><p>Yes, if everyone works inside the same shared Project, the guest log and the Skill are shared context for anyone with access.</p></div>
+    </div>
+
+    <div class="page">
+      <span class="folio">15</span>
+      <h2>The one rule that spans all of it</h2>
+      <p>Draft, then confirm, then act. Claude reads freely, your inbox, your calendar, the guest log, no need to ask each time. But nothing gets sent, posted as a review reply, or marked resolved without you saying go, even if you told it once to "just handle guest replies from now on."</p>
+      <p class="lede">A slow reply is recoverable. A review response that admits fault in a safety complaint, or an email confirming the wrong room, isn't. That asymmetry is the whole reason this rule exists.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">16</span>
+      <h2>Make it stick</h2>
+      <p>Everything in this guide lives in the one Skill file you installed on page 7. Keep working inside the same Claude Project, and every new conversation already knows the guest log format, the workflows, and the liability check, no re-explaining, no retyping.</p>
+      <p class="lede">Twenty minutes of setup, once. After that, it's just "here's a guest request" or "who's still waiting," every shift.</p>
+    </div>
+
+    <div class="page">
+      <span class="folio">17</span>
+      <h2>That's the system</h2>
+      <p>Four disconnected tools, one connector in the middle, and a Skill that carries it all forward. If it saves you the twenty minutes it takes to set up, the real test is your very next guest request.</p>
+      <p class="lede">I write about things like this most weeks, mostly Claude, GPT and a handful of other tools used for actual work, not hype. If that's useful, come find me on LinkedIn.</p>
+      <p class="closing" style="padding:0;margin-top:14px;">Made with a little help from Vantpoint.</p>
+    </div>
+
+  </div>
+
+  <p class="closing">17 pages</p>
+
+</div>
+
+<script>
+(function () {
+  var KIT_FORM_ACTION = "https://app.kit.com/forms/9955922/subscriptions";
+
+  var form = document.getElementById('emailForm');
+  var input = document.getElementById('emailInput');
+  var btn = document.getElementById('submitBtn');
+  var msg = document.getElementById('gateMsg');
+  var locked = document.getElementById('lockedStack');
+  var downloadBtn = document.getElementById('downloadBtn');
+
+  function setMsg(text, kind) {
+    msg.textContent = text;
+    msg.className = 'gate-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function unlock() {
+    locked.classList.remove('locked');
+    downloadBtn.classList.add('show');
+    setMsg("You're in. Grab the Skill above, then scroll down for the rest.", 'success');
+    btn.disabled = true;
+    input.disabled = true;
+    try { localStorage.setItem('frontDeskOSUnlocked', '1'); } catch (e) {}
+  }
+
+  try {
+    if (localStorage.getItem('frontDeskOSUnlocked') === '1') {
+      locked.classList.remove('locked');
+      downloadBtn.classList.add('show');
+    }
+  } catch (e) {}
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = input.value.trim();
+    if (!email || KIT_FORM_ACTION.indexOf('REPLACE_WITH') === 0) {
+      setMsg(KIT_FORM_ACTION.indexOf('REPLACE_WITH') === 0
+        ? 'This page is not wired to Kit yet, set KIT_FORM_ACTION in the script.'
+        : 'Enter a valid email.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    setMsg('', '');
+
+    fetch(KIT_FORM_ACTION, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'email_address=' + encodeURIComponent(email)
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad status');
+        btn.textContent = 'Unlock the guide';
+        unlock();
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Unlock the guide';
+        setMsg("Something didn't go through, try again in a moment.", 'error');
+      });
+  });
+})();
+</script>
+</body>
+</html>
